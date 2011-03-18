@@ -24,6 +24,11 @@
  *   Changed by Sofie Nilsson Jan 2011:
  *   Read module configuration from parameter server. Joysick map to joints is still
  *   not as general as it should be.
+ *   Changed by Sofie Nilsson March 2011
+ *   added uggly fix to make it work also with new logitech gamepad (axes.length=8 buttons.length=6)
+ *   with the old gamepad (axes.length=6 buttons.length=8). This fix is only for the platform movement,
+ *   control of care-o-bot torso as well as the run button will probably not work with new joytick.
+ *   this since those modules are using the two "buttons" that is now classified as axises.
  *
  * \date Date of creation: June 2010
  *
@@ -754,22 +759,34 @@ void TeleopCOB::joy_cb(const joy::Joy::ConstPtr &joy_msg)
 	}
 	//================base================
 	if(has_base_module_ && base_module_.req_vel_.size()==3)
-	{
-		if(axis_vx_>=0 && axis_vx_<(int)joy_msg->get_axes_size())
-			base_module_.req_vel_[0] = joy_msg->axes[axis_vx_]*base_module_.max_vel_[0]*run_factor_;
-		else
-			base_module_.req_vel_[0] = 0.0;
+	  {
+	    if(axis_vx_>=0 && axis_vx_<(int)joy_msg->get_axes_size())
+	      base_module_.req_vel_[0] = joy_msg->axes[axis_vx_]*base_module_.max_vel_[0]*run_factor_;
+	    else
+	      base_module_.req_vel_[0] = 0.0;
 
-		if(axis_vy_>=0 && axis_vy_<(int)joy_msg->get_axes_size())
-			base_module_.req_vel_[1] = joy_msg->axes[axis_vy_]*base_module_.max_vel_[1]*run_factor_;//req_vy_ = joy_msg->axes[axis_vy_]*max_vy_*run_factor_;
-		else
-			base_module_.req_vel_[1] = 0.0; //req_vy_ = 0.0;
-
+	    if(axis_vy_>=0 && axis_vy_<(int)joy_msg->get_axes_size())
+	      base_module_.req_vel_[1] = joy_msg->axes[axis_vy_]*base_module_.max_vel_[1]*run_factor_;//req_vy_ = joy_msg->axes[axis_vy_]*max_vy_*run_factor_;
+	    else
+	      base_module_.req_vel_[1] = 0.0; //req_vy_ = 0.0;
+	      
+	    //uggly fix to make it work also with new joystick
+	    if((int)joy_msg->get_axes_size()>6) // new joystick
+	      {
+		// with the new joystick, the base turn axes has index 4 instead of 3
 		if(axis_vth_>=0 && axis_vth_<(int)joy_msg->get_axes_size())
-			base_module_.req_vel_[2] = joy_msg->axes[axis_vth_]*base_module_.max_vel_[2]*run_factor_;//req_vth_ = joy_msg->axes[axis_vth_]*max_vth_*run_factor_;
+		  base_module_.req_vel_[2] = joy_msg->axes[3]*base_module_.max_vel_[2]*run_factor_;//req_vth_ = joy_msg->axes[axis_vth_]*max_vth_*run_factor_;
 		else
-			base_module_.req_vel_[2] = 0.0; //req_vth_ = 0.0;
-	}
+		  base_module_.req_vel_[2] = 0.0; //req_vth_ = 0.0;
+	      }
+	    else // old joystick
+	      {
+		if(axis_vth_>=0 && axis_vth_<(int)joy_msg->get_axes_size())
+		  base_module_.req_vel_[2] = joy_msg->axes[axis_vth_]*base_module_.max_vel_[2]*run_factor_;//req_vth_ = joy_msg->axes[axis_vth_]*max_vth_*run_factor_;
+		else
+		  base_module_.req_vel_[2] = 0.0; //req_vth_ = 0.0;
+	      }
+	  }
 
 }//joy_cb
 
