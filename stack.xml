@@ -26,4 +26,5 @@
   <depend stack="simulator_gazebo" /> <!-- gazebo -->
   <depend stack="slam_gmapping" /> <!-- gmapping -->
 
+
 </stack>
